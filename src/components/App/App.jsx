@@ -1,27 +1,49 @@
-// import { Profile, FriendList, TransactionHistory } from 'components';
-
-import userData from '../../userData.json';
-import friends from '../../friends.json';
-import transactions from '../../transactions.json';
-import Profile from '../Profile/Profile';
-import FriendList from '../FriendList/FriendList';
-import TransactionHistory from '../TransactionHistory/TransactionHistory';
+import { useEffect, useState } from 'react';
 import Section from '../Section/Section';
-// import Profile from '../Profile/Profile';
-// import FriendList from '../FriendList/FriendList';
-// import TransactionHistory from '../TransactionHistory/TransactionHistory';
+import Description from '../Description/Description';
+import Options from '../Options/Options';
+import Feedback from '../Feedback/Feedback';
+import Notification from '../Notification/Notification';
 const App = () => {
+  const [reviews, setReviews] = useState(() => {
+    const savedFeedback = localStorage.getItem('feedback');
+    return savedFeedback
+      ? JSON.parse(savedFeedback)
+      : { good: 0, neutral: 0, bad: 0 };
+  });
+  useEffect(() => {
+    localStorage.setItem('feedback', JSON.stringify(reviews));
+  }, [reviews]);
+  const updateFeedback = feedbackType => {
+    setReviews({ ...reviews, [feedbackType]: reviews[feedbackType] + 1 });
+  };
+  const resetFeedback = () => {
+    setReviews({
+      good: 0,
+      neutral: 0,
+      bad: 0,
+    });
+  };
+  const totalFeedback = reviews.good + reviews.neutral + reviews.bad;
+  const positiveFeedback = Math.round((reviews.good / totalFeedback) * 100);
+
   return (
     <Section>
-      <Profile
-        name={userData.username}
-        tag={userData.tag}
-        location={userData.location}
-        image={userData.avatar}
-        stats={userData.stats}
+      <Description />
+      <Options
+        updateFeedback={updateFeedback}
+        resetFeedback={resetFeedback}
+        totalFeedback={totalFeedback}
       />
-      <FriendList friends={friends} />
-      <TransactionHistory items={transactions} />
+      {totalFeedback > 0 ? (
+        <Feedback
+          reviews={reviews}
+          totalFeedback={totalFeedback}
+          positiveFeedback={positiveFeedback}
+        />
+      ) : (
+        <Notification />
+      )}
     </Section>
   );
 };
